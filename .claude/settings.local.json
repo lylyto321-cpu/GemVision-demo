@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__Claude_Preview__preview_start",
+      "WebSearch",
+      "Bash(python3:*)",
+      "Bash(cp _raw_3.png ring.png)",
+      "Bash(cp _raw_4.png necklace.png)",
+      "Bash(cp _raw_5.jpeg brooch.jpg)",
+      "Bash(cp _raw_6.png bracelet.png)",
+      "Bash(cp _raw_7.png earrings.png)",
+      "Bash(rm _raw_*.png _raw_*.jpeg)",
+      "Bash(xargs ls -lt)",
+      "Bash(ls -lt /Users/lyanneliang/Downloads/*.jpg /Users/lyanneliang/Downloads/*.png /Users/lyanneliang/Downloads/*.jpeg /Users/lyanneliang/Downloads/*.webp)",
+      "Bash(cp \"/Users/lyanneliang/Downloads/LCG-Blue-Sapp-Emerald_c06dcc04-bfa1-44f4-bb83-72344314bc22_2048x.jpg\" \"/Users/lyanneliang/shadow/images/demo-gemstone.jpg\")",
+      "Bash(cp \"/Users/lyanneliang/Downloads/0142148.webp\" \"/Users/lyanneliang/shadow/images/demo-style.webp\")",
+      "Bash(cp \"/Users/lyanneliang/Downloads/Screenshot 2026-03-13 at 1.26.42 PM.png\" \"/Users/lyanneliang/shadow/images/demo-self.png\")",
+      "Bash(cp \"/Users/lyanneliang/Downloads/Screenshot 2026-03-13 at 1.31.32 PM.png\" \"/Users/lyanneliang/shadow/images/result.png\")",
+      "Bash(ls /Users/lyanneliang/Downloads/*.png)",
+      "Bash(cp \"Screenshot 2026-03-13 at 1.26.42 PM.png\" \"/Users/lyanneliang/shadow/images/demo-self.png\")",
+      "Bash(cp \"Screenshot 2026-03-13 at 1.31.32 PM.png\" \"/Users/lyanneliang/shadow/images/result.png\")",
+      "Bash(git init)",
+      "Bash(git add .)",
+      "Bash(git commit -m \"Initial commit\")",
+      "Bash(git branch -M main)",
+      "Bash(git remote add origin https://github.com/lylyto321-cpu/GemVision-demo.git)",
+      "Bash(git push -u origin main)"
+    ]
+  }
+}

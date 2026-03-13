@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GemVision</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Base ──────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ivory:       #fdf8f3;
+  --ivory-deep:  #f5ede2;
+  --white:       #ffffff;
+  --border:      #e8dbd0;
+  --border-soft: #f0e6dc;
+  --text:        #201710;
+  --text-muted:  #9c8a7e;
+  --gold:        #b8865c;
+  --gold-dark:   #9a6e48;
+  --gold-light:  #f5ede4;
+  --gold-glow:   rgba(184,134,92,0.18);
+  --rose:        #9b566a;
+  --rose-light:  #f7eced;
+  --shadow-sm:   0 2px 12px rgba(32,23,16,0.06);
+  --shadow-md:   0 6px 28px rgba(32,23,16,0.09);
+  --shadow-lg:   0 12px 48px rgba(32,23,16,0.12);
+}
+
+body {
+  font-family: 'Jost', 'Segoe UI', system-ui, sans-serif;
+  font-weight: 300;
+  background: var(--ivory);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Progress Bar ──────────────────────────────────────────── */
+.progress-bar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--border-soft);
+  z-index: 100;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold-dark), var(--gold), #d4a87a);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Step Indicator ────────────────────────────────────────── */
+.step-indicator {
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 100;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.step-indicator.visible { opacity: 1; }
+
+.step-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: all 0.35s;
+}
+
+.step-dot.active  { background: var(--gold); transform: scale(1.5); }
+.step-dot.done    { background: #c9a47e; }
+
+/* ── Screen Container ──────────────────────────────────────── */
+.screen {
+  display: none;
+  min-height: 100vh;
+  padding: 72px 24px 110px;
+  animation: fadeUp 0.45s ease;
+}
+
+.screen.active { display: flex; flex-direction: column; align-items: center; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.screen-inner {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── Typography ────────────────────────────────────────────── */
+h1, h2 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  text-align: center;
+  color: var(--text);
+  font-weight: 400;
+}
+
+h1 {
+  font-size: 2.8rem;
+  letter-spacing: 0.01em;
+  margin-bottom: 8px;
+}
+
+h2 {
+  font-size: 1.75rem;
+  letter-spacing: 0.01em;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  text-align: center;
+  margin-bottom: 36px;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+}
+
+/* ── Buttons ───────────────────────────────────────────────── */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 40px;
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  color: #fff;
+  border: none;
+  border-radius: 40px;
+  font-family: 'Jost', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s;
+  box-shadow: 0 4px 20px var(--gold-glow);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #8a6038, #b8865c);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 28px rgba(184,134,92,0.3);
+}
+
+.btn-primary:disabled {
+  background: linear-gradient(135deg, #cfc2b8, #d8cbc2);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  color: #f5f0ec;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 13px 28px;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 40px;
+  font-family: 'Jost', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover { border-color: var(--gold); color: var(--gold-dark); }
+
+.nav-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 36px;
+}
+
+/* ── Card Buttons ──────────────────────────────────────────── */
+.card-grid {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.card-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+.card-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.card-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+.card-grid.cols-5 { grid-template-columns: repeat(5, 1fr); }
+
+.card-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 10px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  font-family: 'Jost', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.22s;
+  text-align: center;
+  min-height: 80px;
+  box-shadow: var(--shadow-sm);
+}
+
+.card-btn:hover {
+  border-color: var(--gold);
+  background: var(--gold-light);
+  box-shadow: 0 4px 18px var(--gold-glow);
+  transform: translateY(-1px);
+}
+
+.card-btn.selected {
+  border-color: var(--gold);
+  background: var(--gold-light);
+  box-shadow: 0 0 0 1px var(--gold), var(--shadow-sm);
+  color: var(--gold-dark);
+}
+
+.card-btn.demo-locked {
+  pointer-events: none;
+  cursor: default;
+}
+
+.card-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.card-btn.inert {
+  pointer-events: none;
+  cursor: default;
+}
+
+.card-btn .card-icon {
+  font-size: 2rem;
+  margin-bottom: 7px;
+  line-height: 1;
+}
+
+/* ── Jewelry Type Cards (portrait photo style) ───────────── */
+#jewelryGrid {
+  display: flex !important;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+}
+
+.jewelry-card {
+  flex: 0 0 calc(33.33% - 10px);
+  max-width: 180px;
+  aspect-ratio: 3 / 4;
+  background: #fff;
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  cursor: pointer;
+  transition: all 0.22s;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  min-height: unset;
+}
+
+.jewelry-card:hover {
+  border-color: var(--gold);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.jewelry-card.selected {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px var(--gold), var(--shadow-sm);
+  background: #fff;
+  color: inherit;
+}
+
+.jewelry-img-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f7f5;
+  overflow: hidden;
+  padding: 0;
+  position: relative;
+}
+
+.jewelry-img-area img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.jewelry-icon-fallback {
+  font-size: 3rem;
+  line-height: 1;
+  position: relative;
+  z-index: 1;
+}
+
+.jewelry-label {
+  width: 100%;
+  text-align: center;
+  font-family: 'Jost', 'Segoe UI', system-ui, sans-serif;
+  font-size: 0.58rem;
+  font-weight: 400;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 11px 8px 13px;
+  border-top: 1px solid var(--border-soft);
+  background: #fff;
+}
+
+/* ── Form Fields ───────────────────────────────────────────── */
+.form-group { width: 100%; margin-bottom: 16px; }
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: 'Jost', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 300;
+  color: var(--text);
+  background: var(--white);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--gold-glow);
+}
+
+.text-input-alt { width: 100%; margin-top: 16px; }
+
+.text-input-alt input {
+  width: 100%;
+  padding: 13px 18px;
+  border: 1px solid var(--border);
+  border-radius: 40px;
+  font-family: 'Jost', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 300;
+  color: var(--text);
+  background: var(--white);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  text-align: center;
+}
+
+.text-input-alt input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--gold-glow);
+}
+
+.text-input-alt input::placeholder {
+  color: #c8bdb5;
+  font-style: italic;
+}
+
+/* ── Upload Zone ───────────────────────────────────────────── */
+.upload-zone {
+  width: 100%;
+  min-height: 190px;
+  border: 1.5px dashed var(--border);
+  border-radius: 16px;
+  background: var(--ivory-deep);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s;
+  padding: 32px 24px;
+  position: relative;
+}
+
+.upload-zone:hover {
+  border-color: var(--gold);
+  background: var(--gold-light);
+  box-shadow: 0 4px 20px var(--gold-glow);
+}
+
+.upload-zone.dragover {
+  border-color: var(--gold-dark);
+  border-style: solid;
+  background: #fdf3eb;
+  box-shadow: 0 6px 24px var(--gold-glow);
+}
+
+.upload-zone .upload-icon {
+  font-size: 1.8rem;
+  color: #d4bfb4;
+  margin-bottom: 10px;
+}
+
+.upload-zone .upload-text {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+.upload-zone .upload-text span {
+  color: var(--gold-dark);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.upload-zone.has-file {
+  border-style: solid;
+  border-color: var(--gold);
+  background: var(--white);
+  padding: 16px;
+}
+
+.upload-zone.has-file .upload-placeholder { display: none; }
+
+.upload-preview {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: 10px;
+}
+
+.upload-zone.has-file .upload-preview { display: flex; }
+
+.upload-preview img {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 10px;
+  object-fit: contain;
+}
+
+/* Demo drop: hide the colored canvas block, show neutral ready state */
+.upload-zone.demo-received .upload-preview img { display: none; }
+
+.demo-ready-msg {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 18px 0 8px;
+  color: var(--text-muted);
+  font-family: 'Jost', sans-serif;
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+}
+
+.demo-ready-msg .demo-ready-check {
+  font-size: 1.4rem;
+  color: var(--gold);
+}
+
+.upload-zone.demo-received .demo-ready-msg { display: flex; }
+
+.upload-remove {
+  margin-top: 10px;
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  color: var(--rose);
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: 'Jost', sans-serif;
+  font-weight: 400;
+}
+
+.upload-remove:hover { text-decoration: underline; text-underline-offset: 2px; }
+
+/* ── Demo Overlay Layer ────────────────────────────────────── */
+.demo-overlay { position: absolute; z-index: 50; pointer-events: none; }
+
+.demo-tooltip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(155,86,106,0.9);
+  color: #fff;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 0.95rem;
+  font-style: italic;
+  font-weight: 400;
+  padding: 10px 18px;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(155,86,106,0.25);
+  white-space: nowrap;
+  pointer-events: none;
+  line-height: 1.3;
+}
+
+.demo-tooltip::before {
+  content: "Demo";
+  font-family: 'Jost', sans-serif;
+  font-size: 0.6rem;
+  font-style: normal;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  background: rgba(255,255,255,0.2);
+  padding: 2px 7px;
+  border-radius: 4px;
+  margin-right: 4px;
+}
+
+/* ── Animated Arrow ────────────────────────────────────────── */
+#demoArrowOverlay {
+  position: fixed;
+  z-index: 200;
+  pointer-events: none;
+  display: none;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+
+#demoArrowOverlay.visible { display: flex; }
+
+.demo-arrow-svg { animation: bounceRight 1.2s ease-in-out infinite; }
+
+.demo-arrow-svg svg {
+  width: 28px; height: 28px;
+  filter: drop-shadow(0 2px 6px rgba(155,86,106,0.45));
+}
+
+@keyframes bounceRight {
+  0%, 100% { transform: translateX(0); opacity: 1; }
+  50%       { transform: translateX(7px); opacity: 0.6; }
+}
+
+.demo-arrow-label {
+  background: rgba(155,86,106,0.9);
+  color: #fff;
+  font-family: 'Jost', 'Segoe UI', system-ui, sans-serif;
+  font-size: 0.8rem;
+  font-style: normal;
+  font-weight: 400;
+  padding: 7px 16px;
+  border-radius: 8px;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(155,86,106,0.25);
+}
+
+/* ── Pre-placed Demo Image (Draggable) ─────────────────────── */
+.demo-drag-image {
+  position: fixed;
+  bottom: 36px; right: 36px;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: grab;
+  user-select: none;
+}
+
+.demo-drag-image:active { cursor: grabbing; }
+
+@keyframes floatBounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-7px); }
+}
+
+.demo-drag-image { animation: floatBounce 2.4s ease-in-out infinite; }
+.demo-drag-image:active { animation: none; }
+
+.demo-drag-thumb {
+  width: 110px; height: 110px;
+  border-radius: 14px;
+  background: var(--rose-light);
+  border: 1px solid rgba(155,86,106,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Jost', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  color: var(--rose);
+  text-align: center;
+  padding: 10px;
+  box-shadow: 0 8px 28px rgba(32,23,16,0.13);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.demo-drag-thumb img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.demo-drag-label {
+  margin-top: 7px;
+  font-family: 'Jost', 'Segoe UI', system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-style: normal;
+  color: var(--rose);
+  pointer-events: none;
+  background: var(--rose-light);
+  border: 1px solid rgba(155,86,106,0.15);
+  padding: 3px 12px;
+  border-radius: 20px;
+}
+
+/* ── Result Screen ─────────────────────────────────────────── */
+.result-image-container {
+  width: 100%;
+  max-width: 500px;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  margin-bottom: 28px;
+  background: var(--ivory-deep);
+}
+
+.result-image-container img { width: 100%; display: block; }
+
+.result-loader {
+  width: 100%;
+  height: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  background: linear-gradient(145deg, #f5ede2, #ecddd0);
+}
+
+.result-spinner {
+  width: 44px;
+  height: 44px;
+  border: 3px solid var(--rose-light);
+  border-top-color: var(--rose);
+  border-radius: 50%;
+  animation: resultSpin 0.85s linear infinite;
+}
+
+@keyframes resultSpin {
+  to { transform: rotate(360deg); }
+}
+
+.result-loading-text {
+  font-family: 'Jost', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 300;
+  letter-spacing: 0.08em;
+  color: var(--rose);
+}
+
+/* ── Welcome Screen Specific ───────────────────────────────── */
+.logo {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 3rem;
+  font-weight: 300;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold), #d4a87a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 6px;
+}
+
+.welcome-tagline {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.2rem;
+  font-style: italic;
+  font-weight: 300;
+  color: var(--gold-dark);
+  margin-bottom: 20px;
+  letter-spacing: 0.04em;
+}
+
+.welcome-desc {
+  font-size: 0.9rem;
+  font-weight: 300;
+  color: var(--text-muted);
+  text-align: center;
+  max-width: 440px;
+  line-height: 1.6;
+  margin-bottom: 36px;
+}
+
+/* ── Upload label (outside form-group) ─────────────────────── */
+.upload-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  align-self: flex-start;
+}
+
+/* ── Decorative divider ─────────────────────────────────────── */
+.divider {
+  width: 40px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin: 4px auto 24px;
+}
+
+/* ── Responsive ────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .card-grid.cols-3 { grid-template-columns: repeat(2, 1fr); }
+  .card-grid.cols-4 { grid-template-columns: repeat(2, 1fr); }
+  .card-grid.cols-5 { grid-template-columns: repeat(3, 1fr); }
+  .form-row { grid-template-columns: 1fr; }
+  h1 { font-size: 2.2rem; }
+  h2 { font-size: 1.5rem; }
+  .demo-drag-image { bottom: 16px; right: 16px; }
+  .demo-drag-thumb { width: 90px; height: 90px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Progress Bar -->
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+<!-- Global Demo Arrow Overlay -->
+<div id="demoArrowOverlay">
+  <div class="demo-arrow-label" id="demoArrowLabel"></div>
+  <div class="demo-arrow-svg">
+    <svg viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M4 15 L22 15 M15 8 L22 15 L15 22" stroke="#9b566a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+</div>
+
+<!-- Step Dots -->
+<div class="step-indicator" id="stepIndicator"></div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SCREEN 1 — Welcome
+     ═══════════════════════════════════════════════════════════ -->
+<div class="screen active" id="screen-welcome">
+  <div class="screen-inner" style="justify-content: center; min-height: 70vh;">
+    <div class="logo">GemVision</div>
+    <div class="divider"></div>
+    <div class="welcome-tagline">See your gemstone come to life &mdash; on you.</div>
+    <p class="welcome-desc">
+      Experience what your gemstone would look like as a piece of jewelry, crafted to your style and set on you using AI-generated imagery.
+    </p>
+    <button class="btn-primary" onclick="goTo(1)">Try the Demo</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SCREEN 2 — Choose Jewelry Type
+     ═══════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-jewelry">
+  <div class="screen-inner">
+    <h2>What kind of jewelry would you like to create?</h2>
+    <p class="subtitle">Choose one to get started.</p>
+    <div id="jewelryGrid">
+      <button class="card-btn jewelry-card" data-value="Ring" onclick="selectJewelry(this)">
+        <div class="jewelry-img-area">
+          <img src="images/ring.png" alt="Ring" onload="this.nextElementSibling.style.display='none'" onerror="this.style.display='none'">
+          <span class="jewelry-icon-fallback">&#128141;</span>
+        </div>
+        <div class="jewelry-label">Ring</div>
+      </button>
+      <button class="card-btn jewelry-card" data-value="Necklace" onclick="selectJewelry(this)">
+        <div class="jewelry-img-area">
+          <img src="images/necklace.png" alt="Necklace" onload="this.nextElementSibling.style.display='none'" onerror="this.style.display='none'">
+          <span class="jewelry-icon-fallback">&#128255;</span>
+        </div>
+        <div class="jewelry-label">Necklace</div>
+      </button>
+      <button class="card-btn jewelry-card" data-value="Bracelet" onclick="selectJewelry(this)">
+        <div class="jewelry-img-area">
+          <img src="images/bracelet.png" alt="Bracelet" onload="this.nextElementSibling.style.display='none'" onerror="this.style.display='none'">
+          <span class="jewelry-icon-fallback">&#128279;</span>
+        </div>
+        <div class="jewelry-label">Bracelet</div>
+      </button>
+      <button class="card-btn jewelry-card" data-value="Brooch" onclick="selectJewelry(this)">
+        <div class="jewelry-img-area">
+          <img src="images/brooch.jpg" alt="Brooch" onload="this.nextElementSibling.style.display='none'" onerror="this.style.display='none'">
+          <span class="jewelry-icon-fallback">&#127989;</span>
+        </div>
+        <div class="jewelry-label">Brooch</div>
+      </button>
+      <button class="card-btn jewelry-card" data-value="Earrings" onclick="selectJewelry(this)">
+        <div class="jewelry-img-area">
+          <img src="images/earrings.png" alt="Earrings" onload="this.nextElementSibling.style.display='none'" onerror="this.style.display='none'">
+          <span class="jewelry-icon-fallback">&#127769;</span>
+        </div>
+        <div class="jewelry-label">Earrings</div>
+      </button>
+    </div>
+
+
+    <div class="nav-buttons">
+      <button class="btn-secondary" onclick="goBack()">Back</button>
+      <button class="btn-primary" id="btnJewelryNext" disabled onclick="goTo(2)">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SCREEN 3 — Gemstone Details
+     ═══════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-details">
+  <div class="screen-inner">
+    <h2 id="detailsHeading">Tell us about your gemstone</h2>
+    <p class="subtitle">Enter dimensions and upload a photo of your stone.</p>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Carat</label>
+        <input type="number" id="inputCarat" placeholder="9.8" step="0.01" min="0">
+      </div>
+      <div class="form-group">
+        <label>Width (mm)</label>
+        <input type="number" id="inputWidth" placeholder="12.5" step="0.1" min="0">
+      </div>
+      <div class="form-group">
+        <label>Height (mm)</label>
+        <input type="number" id="inputHeight" placeholder="8.7" step="0.1" min="0">
+      </div>
+    </div>
+
+    <div class="upload-label">Upload a photo of your gemstone</div>
+    <div class="upload-zone" id="uploadGemstone"
+         ondragover="handleDragOver(event, this)" ondragleave="handleDragLeave(this)"
+         ondrop="handleDrop(event, this, 'gemstone')" onclick="triggerFileInput('fileGemstone')">
+      <div class="upload-placeholder">
+        <div class="upload-text">Drag and drop or <span>browse</span></div>
+      </div>
+      <div class="upload-preview">
+        <img id="previewGemstone" src="" alt="Preview">
+        <div class="demo-ready-msg"><span class="demo-ready-check">✓</span>Demo image ready</div>
+        <button class="upload-remove" onclick="removeUpload(event, 'gemstone')">Remove</button>
+      </div>
+    </div>
+    <input type="file" id="fileGemstone" accept="image/*" style="display:none" onchange="handleFileSelect(this, 'gemstone')">
+
+    <div class="nav-buttons">
+      <button class="btn-secondary" onclick="goBack()">Back</button>
+      <button class="btn-primary" id="btnDetailsNext" disabled onclick="goToAfterDetails()">Continue</button>
+    </div>
+  </div>
+
+  <!-- Demo drag image -->
+  <div class="demo-drag-image" id="demoDragGemstone" draggable="true"
+       ondragstart="handleDemoDragStart(event, 'gemstone')">
+    <div class="demo-drag-thumb"><img src="images/demo-gemstone.jpg" alt="Sapphire"></div>
+    <div class="demo-drag-label">Demo image &mdash; drag me!</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SCREEN 5 — Select Finger (Ring Only)
+     ═══════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-finger">
+  <div class="screen-inner">
+    <h2 style="margin-bottom: 36px">Which finger will the ring be on?</h2>
+    <div class="card-grid cols-5" id="fingerGrid">
+      <button class="card-btn" data-value="Thumb" onclick="selectFinger(this)">Thumb</button>
+      <button class="card-btn" data-value="Index" onclick="selectFinger(this)">Index</button>
+      <button class="card-btn" data-value="Middle" onclick="selectFinger(this)">Middle</button>
+      <button class="card-btn inert" data-value="Ring">Ring</button>
+      <button class="card-btn" data-value="Pinky" onclick="selectFinger(this)">Pinky</button>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="btn-secondary" onclick="goBack()">Back</button>
+      <button class="btn-primary" id="btnFingerNext" disabled onclick="goTo(4)">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SCREEN 6 — Upload Image of Yourself
+     ═══════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-selfphoto">
+  <div class="screen-inner">
+    <h2>Upload a photo of yourself</h2>
+    <p class="subtitle" id="selfPhotoSubtext">Make sure all five fingers are clearly visible.</p>
+
+    <div class="upload-zone" id="uploadSelf"
+         ondragover="handleDragOver(event, this)" ondragleave="handleDragLeave(this)"
+         ondrop="handleDrop(event, this, 'self')" onclick="triggerFileInput('fileSelf')">
+      <div class="upload-placeholder">
+        <div class="upload-text">Drag and drop or <span>browse</span></div>
+      </div>
+      <div class="upload-preview">
+        <img id="previewSelf" src="" alt="Preview">
+        <div class="demo-ready-msg"><span class="demo-ready-check">✓</span>Demo image ready</div>
+        <button class="upload-remove" onclick="removeUpload(event, 'self')">Remove</button>
+      </div>
+    </div>
+    <input type="file" id="fileSelf" accept="image/*" style="display:none" onchange="handleFileSelect(this, 'self')">
+
+    <div class="nav-buttons">
+      <button class="btn-secondary" onclick="goBack()">Back</button>
+      <button class="btn-primary" id="btnSelfNext" disabled onclick="goTo(5)">Continue</button>
+    </div>
+  </div>
+
+  <!-- Demo drag image -->
+  <div class="demo-drag-image" id="demoDragSelf" draggable="true"
+       ondragstart="handleDemoDragStart(event, 'self')">
+    <div class="demo-drag-thumb"><img src="images/demo-self.png" alt="Hand Photo"></div>
+    <div class="demo-drag-label">Demo image &mdash; drag me!</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SCREEN 7 — Upload Style Reference
+     ═══════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-style">
+  <div class="screen-inner">
+    <h2>Show us a style you love</h2>
+    <p class="subtitle" id="styleSubtext">Upload a photo of a ring style you'd like as inspiration.</p>
+
+    <div class="upload-zone" id="uploadStyle"
+         ondragover="handleDragOver(event, this)" ondragleave="handleDragLeave(this)"
+         ondrop="handleDrop(event, this, 'style')" onclick="triggerFileInput('fileStyle')">
+      <div class="upload-placeholder">
+        <div class="upload-text">Drag and drop or <span>browse</span></div>
+      </div>
+      <div class="upload-preview">
+        <img id="previewStyle" src="" alt="Preview">
+        <div class="demo-ready-msg"><span class="demo-ready-check">✓</span>Demo image ready</div>
+        <button class="upload-remove" onclick="removeUpload(event, 'style')">Remove</button>
+      </div>
+    </div>
+    <input type="file" id="fileStyle" accept="image/*" style="display:none" onchange="handleFileSelect(this, 'style')">
+
+    <div class="nav-buttons">
+      <button class="btn-secondary" onclick="goBack()">Back</button>
+      <button class="btn-primary" id="btnStyleNext" disabled onclick="goTo(6)">Continue</button>
+    </div>
+  </div>
+
+  <!-- Demo drag image -->
+  <div class="demo-drag-image" id="demoDragStyle" draggable="true"
+       ondragstart="handleDemoDragStart(event, 'style')">
+    <div class="demo-drag-thumb"><img src="images/demo-style.webp" alt="Ring Style"></div>
+    <div class="demo-drag-label">Demo image &mdash; drag me!</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SCREEN 8 — Result
+     ═══════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-result">
+  <div class="screen-inner">
+    <h2 style="margin-bottom: 36px">How your ring will look like...</h2>
+    <div class="result-image-container">
+      <div class="result-loader" id="resultLoader">
+        <div class="result-spinner"></div>
+        <p class="result-loading-text">Generating your visualization…</p>
+      </div>
+      <img src="images/result.png" alt="AI-Generated Result" id="resultImage" style="display:none">
+    </div>
+    <div class="nav-buttons" id="resultNav" style="visibility:hidden">
+      <button class="btn-secondary" onclick="goBack()">Back</button>
+      <button class="btn-primary" onclick="startOver()">Start Over</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   State
+   ══════════════════════════════════════════════════════════════ */
+const state = {
+  currentScreen: 0,
+  jewelryType: null,
+  gemstone: 'Sapphire',
+  finger: null,
+  uploads: { gemstone: false, self: false, style: false },
+  history: [0]
+};
+
+/* Screen order mapping:
+   0 = welcome
+   1 = jewelry
+   2 = details
+   3 = finger (conditional)
+   4 = selfphoto
+   5 = style
+   6 = result
+*/
+
+const screens = [
+  'screen-welcome',
+  'screen-jewelry',
+  'screen-details',
+  'screen-finger',
+  'screen-selfphoto',
+  'screen-style',
+  'screen-result'
+];
+
+function getTotalSteps() {
+  return state.jewelryType === 'Ring' ? 7 : 6;
+}
+
+function getLogicalStep() {
+  const s = state.currentScreen;
+  if (state.jewelryType !== 'Ring' && s >= 4) {
+    return s; // finger screen is skipped but indices shift
+  }
+  return s;
+}
+
+/* ── Navigation ─────────────────────────────────────────────── */
+function showScreen(index) {
+  screens.forEach((id, i) => {
+    const el = document.getElementById(id);
+    el.classList.toggle('active', i === index);
+  });
+  state.currentScreen = index;
+  updateProgress();
+  updateStepDots();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  applyDemoLocks(index);
+  // Reset demo drag widget visibility on each screen transition
+  ['demoDragGemstone', 'demoDragSelf', 'demoDragStyle'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = '';
+  });
+  // Reposition demo arrow after paint
+  requestAnimationFrame(() => requestAnimationFrame(updateDemoArrow));
+
+  // Finger screen: Middle is preselected so Continue is always enabled
+  // Result screen: show loader for 2s then reveal image
+  if (index === 6) {
+    const loader = document.getElementById('resultLoader');
+    const img    = document.getElementById('resultImage');
+    const nav    = document.getElementById('resultNav');
+    loader.style.display  = '';
+    img.style.display     = 'none';
+    nav.style.visibility  = 'hidden';
+    setTimeout(() => {
+      loader.style.display  = 'none';
+      img.style.display     = 'block';
+      nav.style.visibility  = 'visible';
+    }, 2000);
+  }
+}
+
+/* ── Demo Lock Config ──────────────────────────────────────── */
+// Maps screen index → { grid selector, allowed data-value }
+const demoLockConfig = {
+  1: { grid: '#jewelryGrid', value: 'Ring' },
+  3: { grid: '#fingerGrid',  value: 'Middle' },
+};
+
+function applyDemoLocks(screenIndex) {
+  // Clear existing locks across all grids
+  document.querySelectorAll('.card-btn.demo-locked').forEach(b => b.classList.remove('demo-locked'));
+  const config = demoLockConfig[screenIndex];
+  if (!config) return;
+  const grid = document.querySelector(config.grid);
+  if (!grid) return;
+  grid.querySelectorAll('.card-btn').forEach(btn => {
+    if (btn.dataset.value !== config.value) btn.classList.add('demo-locked');
+  });
+}
+
+/* ── Demo Arrow Positioning ────────────────────────────────── */
+const demoArrowConfig = {
+  1: { selector: '.card-btn[data-value="Ring"]',              label: 'For this demo, select Ring' },
+  3: { selector: '#fingerGrid .card-btn[data-value="Middle"]', label: 'Select a finger' },
+};
+
+function updateDemoArrow() {
+  const overlay = document.getElementById('demoArrowOverlay');
+  const config = demoArrowConfig[state.currentScreen];
+  if (!config) { overlay.classList.remove('visible'); return; }
+
+  const target = document.querySelector(config.selector);
+  if (!target) { overlay.classList.remove('visible'); return; }
+
+  const rect = target.getBoundingClientRect();
+  // Position overlay just to the left of the card, clamped so it never clips off-screen
+  const gap = 6;
+  const minLeft = 10; // minimum left so overlay stays on-screen
+  const desiredLeft = Math.max(minLeft, rect.left - gap);
+  overlay.style.left = desiredLeft + 'px';
+  overlay.style.top = (rect.top + rect.height / 2) + 'px';
+  overlay.style.transform = 'translate(-100%, -50%)';
+  document.getElementById('demoArrowLabel').textContent = config.label;
+  overlay.classList.add('visible');
+}
+
+window.addEventListener('resize', updateDemoArrow);
+
+function goTo(targetScreen) {
+  state.history.push(targetScreen);
+  showScreen(targetScreen);
+}
+
+function goBack() {
+  if (state.history.length > 1) {
+    state.history.pop();
+    const prev = state.history[state.history.length - 1];
+    showScreen(prev);
+  }
+}
+
+function goToAfterDetails() {
+  if (state.jewelryType === 'Ring') {
+    goTo(3); // finger screen
+  } else {
+    goTo(4); // skip to self photo
+  }
+}
+
+function startOver() {
+  state.jewelryType = null;
+  state.gemstone = null;
+  state.finger = null;
+  state.uploads = { gemstone: false, self: false, style: false };
+  state.history = [0, 1];
+
+  // Reset UI
+  document.querySelectorAll('.card-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('inputCarat').value = '';
+  document.getElementById('inputWidth').value = '';
+  document.getElementById('inputHeight').value = '';
+  ['Gemstone', 'Self', 'Style'].forEach(k => {
+    const zone = document.getElementById('upload' + (k === 'Gemstone' ? 'Gemstone' : k === 'Self' ? 'Self' : 'Style'));
+    zone.classList.remove('has-file', 'demo-received');
+  });
+  document.getElementById('btnJewelryNext').disabled = true;
+  document.getElementById('btnDetailsNext').disabled = true;
+  document.getElementById('btnFingerNext').disabled = true;
+  document.getElementById('btnSelfNext').disabled = true;
+  document.getElementById('btnStyleNext').disabled = true;
+
+  showScreen(1);
+}
+
+/* ── Progress ──────────────────────────────────────────────── */
+function updateProgress() {
+  const total = getTotalSteps();
+  // Map currentScreen to a visual step
+  let visualStep = state.currentScreen;
+  if (state.jewelryType !== 'Ring' && state.currentScreen >= 5) {
+    visualStep = state.currentScreen - 1;
+  }
+  const pct = Math.min(100, (visualStep / (total - 1)) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+function updateStepDots() {
+  const indicator = document.getElementById('stepIndicator');
+  const total = getTotalSteps();
+  indicator.innerHTML = '';
+
+  let visualStep = state.currentScreen;
+  if (state.jewelryType !== 'Ring' && state.currentScreen >= 5) {
+    visualStep = state.currentScreen - 1;
+  }
+
+  for (let i = 0; i < total; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'step-dot';
+    if (i === visualStep) dot.classList.add('active');
+    else if (i < visualStep) dot.classList.add('done');
+    indicator.appendChild(dot);
+  }
+
+  indicator.classList.toggle('visible', state.currentScreen > 0);
+}
+
+/* ── Jewelry Selection ─────────────────────────────────────── */
+function selectJewelry(btn) {
+  document.querySelectorAll('#jewelryGrid .card-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  state.jewelryType = btn.dataset.value;
+  document.getElementById('btnJewelryNext').disabled = false;
+}
+
+/* ── Gemstone Selection ────────────────────────────────────── */
+function selectGemstone(btn) {
+  document.querySelectorAll('#gemstoneGrid .card-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  state.gemstone = btn.dataset.value;
+  const gc = document.getElementById('gemstoneCustom');
+  if (gc) gc.value = '';
+  updateGemstoneHeading();
+  preFillDemoValues();
+}
+
+function customGemstone(input) {
+  if (input.value.trim()) {
+    document.querySelectorAll('#gemstoneGrid .card-btn').forEach(b => b.classList.remove('selected'));
+    state.gemstone = input.value.trim();
+  }
+  updateGemstoneHeading();
+}
+
+function updateGemstoneHeading() {
+  if (state.gemstone) {
+    document.getElementById('detailsHeading').textContent = 'Tell us about your ' + state.gemstone.toLowerCase();
+  }
+}
+
+function preFillDemoValues() {
+  if (state.gemstone === 'Sapphire') {
+    document.getElementById('inputCarat').value = '2.8';
+    document.getElementById('inputWidth').value = '8.2';
+    document.getElementById('inputHeight').value = '6.5';
+  }
+}
+
+/* ── Finger Selection ──────────────────────────────────────── */
+function selectFinger(btn) {
+  document.querySelectorAll('#fingerGrid .card-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  state.finger = btn.dataset.value;
+  document.getElementById('btnFingerNext').disabled = false;
+}
+
+/* ── Upload self-photo / style subtext adaptation ──────────── */
+function updateAdaptiveText() {
+  const jt = state.jewelryType;
+  const selfSub = document.getElementById('selfPhotoSubtext');
+  const styleSub = document.getElementById('styleSubtext');
+
+  const selfTexts = {
+    Ring: 'Make sure all five fingers are clearly visible.',
+    Necklace: 'Make sure your neck and upper chest area are clearly visible.',
+    Bracelet: 'Make sure your wrist is clearly visible.',
+    Brooch: 'Make sure your upper body / chest area is clearly visible.'
+  };
+
+  selfSub.textContent = selfTexts[jt] || selfTexts.Ring;
+  styleSub.textContent = 'Upload a photo of a ' + (jt || 'ring').toLowerCase() + ' style you\'d like as inspiration.';
+}
+
+/* ── Drag & Drop Upload ────────────────────────────────────── */
+function handleDragOver(e, zone) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'copy';
+  zone.classList.add('dragover');
+}
+
+function handleDragLeave(zone) {
+  zone.classList.remove('dragover');
+}
+
+function handleDrop(e, zone, key) {
+  e.preventDefault();
+  zone.classList.remove('dragover');
+
+  // Check for demo image data — show preview and hide the drag widget
+  const demoData = e.dataTransfer.getData('text/demo-image');
+  if (demoData) {
+    showUploadPreview(zone, key, demoData);
+    const widgetMap = { gemstone: 'demoDragGemstone', self: 'demoDragSelf', style: 'demoDragStyle' };
+    const widget = document.getElementById(widgetMap[key]);
+    if (widget) widget.style.display = 'none';
+    return;
+  }
+
+  // Regular file drop
+  const files = e.dataTransfer.files;
+  if (files.length > 0 && files[0].type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      showUploadPreview(zone, key, ev.target.result);
+    };
+    reader.readAsDataURL(files[0]);
+  }
+}
+
+function triggerFileInput(inputId) {
+  document.getElementById(inputId).click();
+}
+
+function handleFileSelect(input, key) {
+  if (input.files.length > 0) {
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      const zoneId = key === 'gemstone' ? 'uploadGemstone' : key === 'self' ? 'uploadSelf' : 'uploadStyle';
+      showUploadPreview(document.getElementById(zoneId), key, ev.target.result);
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+function showUploadPreview(zone, key, dataUrl) {
+  const previewId = key === 'gemstone' ? 'previewGemstone' : key === 'self' ? 'previewSelf' : 'previewStyle';
+  document.getElementById(previewId).src = dataUrl;
+  zone.classList.add('has-file');
+  state.uploads[key] = true;
+
+  // Enable next buttons
+  if (key === 'gemstone') document.getElementById('btnDetailsNext').disabled = false;
+  if (key === 'self') document.getElementById('btnSelfNext').disabled = false;
+  if (key === 'style') document.getElementById('btnStyleNext').disabled = false;
+}
+
+function removeUpload(e, key) {
+  e.stopPropagation();
+  const zoneId = key === 'gemstone' ? 'uploadGemstone' : key === 'self' ? 'uploadSelf' : 'uploadStyle';
+  const zone = document.getElementById(zoneId);
+  zone.classList.remove('has-file', 'demo-received');
+  state.uploads[key] = false;
+
+  // Restore the demo drag widget
+  const widgetMap = { gemstone: 'demoDragGemstone', self: 'demoDragSelf', style: 'demoDragStyle' };
+  const widget = document.getElementById(widgetMap[key]);
+  if (widget) widget.style.display = '';
+
+  if (key === 'gemstone') document.getElementById('btnDetailsNext').disabled = true;
+  if (key === 'self') document.getElementById('btnSelfNext').disabled = true;
+  if (key === 'style') document.getElementById('btnStyleNext').disabled = true;
+}
+
+/* ── Demo Draggable Images ─────────────────────────────────── */
+const demoImageData = {};
+(function preloadDemoImages() {
+  const srcMap = {
+    gemstone: 'images/demo-gemstone.jpg',
+    self:     'images/demo-self.png',
+    style:    'images/demo-style.webp'
+  };
+  Object.entries(srcMap).forEach(([key, src]) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      canvas.getContext('2d').drawImage(img, 0, 0);
+      try { demoImageData[key] = canvas.toDataURL(); } catch(err) {}
+    };
+    img.src = src;
+  });
+})();
+
+function handleDemoDragStart(e, key) {
+  const dataUrl = demoImageData[key];
+  if (dataUrl) e.dataTransfer.setData('text/demo-image', dataUrl);
+  e.dataTransfer.effectAllowed = 'copy';
+}
+
+/* ── Screen transition hooks ───────────────────────────────── */
+const observer = new MutationObserver(() => {
+  updateAdaptiveText();
+});
+
+// Watch for screen changes
+screens.forEach(id => {
+  const el = document.getElementById(id);
+  observer.observe(el, { attributes: true, attributeFilter: ['class'] });
+});
+
+/* ── Init ──────────────────────────────────────────────────── */
+updateProgress();
+updateStepDots();
+</script>
+
+</body>
+</html>
