@@ -646,6 +646,12 @@ h2 {
   border-radius: 10px;
 }
 
+.demo-drag-pair {
+  display: flex;
+  gap: 6px;
+  pointer-events: none;
+}
+
 .demo-drag-label {
   margin-top: 7px;
   font-family: 'Jost', 'Segoe UI', system-ui, sans-serif;
@@ -659,6 +665,27 @@ h2 {
   border-radius: 20px;
 }
 
+/* ── Dual Upload Row (Style screen) ───────────────────────── */
+.dual-upload-row {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+}
+
+.dual-upload-row .upload-zone {
+  flex: 1;
+  min-width: 0;
+}
+
+.upload-slot-label {
+  font-family: 'Jost', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  color: var(--rose);
+  margin-bottom: 8px;
+}
+
 /* ── Result Screen ─────────────────────────────────────────── */
 .result-image-container {
   width: 100%;
@@ -670,7 +697,28 @@ h2 {
   background: var(--ivory-deep);
 }
 
-.result-image-container img { width: 100%; display: block; }
+.dual-result-row {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+  margin-bottom: 28px;
+}
+
+.dual-result-row .result-image-container {
+  flex: 1;
+  max-width: none;
+  margin-bottom: 0;
+  height: 420px;
+}
+
+.result-image-container img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center 30%;
+}
+
 
 .result-loader {
   width: 100%;
@@ -747,6 +795,26 @@ h2 {
   color: var(--text-muted);
   margin-bottom: 10px;
   align-self: flex-start;
+}
+
+.instruction-box {
+  width: 100%;
+  min-height: 70px;
+  padding: 14px 18px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  background: var(--white);
+  font-family: 'Jost', sans-serif;
+  font-size: 0.92rem;
+  color: var(--text-primary);
+  resize: none;
+  pointer-events: none;
+  cursor: text;
+}
+
+.instruction-box::placeholder {
+  color: #9b8e85;
+  font-style: italic;
 }
 
 /* ── Decorative divider ─────────────────────────────────────── */
@@ -987,17 +1055,23 @@ h2 {
     </div>
     <input type="file" id="fileStyle" accept="image/*" style="display:none" onchange="handleFileSelect(this, 'style')">
 
+    <div class="upload-label" style="margin-top: 24px;">Any special instructions?</div>
+    <textarea class="instruction-box" placeholder="White gold. Thin band" readonly></textarea>
+
     <div class="nav-buttons">
       <button class="btn-secondary" onclick="goBack()">Back</button>
       <button class="btn-primary" id="btnStyleNext" disabled onclick="goTo(6)">Continue</button>
     </div>
   </div>
 
-  <!-- Demo drag image -->
+  <!-- Demo drag images (stacked as one) -->
   <div class="demo-drag-image" id="demoDragStyle" draggable="true"
        ondragstart="handleDemoDragStart(event, 'style')">
-    <div class="demo-drag-thumb"><img src="images/demo-style.webp" alt="Ring Style"></div>
-    <div class="demo-drag-label">Demo image &mdash; drag me!</div>
+    <div class="demo-drag-pair">
+      <div class="demo-drag-thumb"><img src="images/demo-style.webp" alt="Ring Style"></div>
+      <div class="demo-drag-thumb"><img src="images/demo-style2.webp" alt="Ring Style 2"></div>
+    </div>
+    <div class="demo-drag-label">Demo images &mdash; drag me!</div>
   </div>
 </div>
 
@@ -1006,13 +1080,22 @@ h2 {
      ═══════════════════════════════════════════════════════════ -->
 <div class="screen" id="screen-result">
   <div class="screen-inner">
-    <h2 style="margin-bottom: 36px">How your ring will look like...</h2>
-    <div class="result-image-container">
-      <div class="result-loader" id="resultLoader">
-        <div class="result-spinner"></div>
-        <p class="result-loading-text">Generating your visualization…</p>
+    <h2 style="margin-bottom: 36px">How the ring will look on you...</h2>
+    <div class="dual-result-row">
+      <div class="result-image-container">
+        <div class="result-loader" id="resultLoader">
+          <div class="result-spinner"></div>
+          <p class="result-loading-text">Generating your visualization…</p>
+        </div>
+        <img src="images/result.png" alt="AI-Generated Result" id="resultImage" style="display:none">
       </div>
-      <img src="images/result.png" alt="AI-Generated Result" id="resultImage" style="display:none">
+      <div class="result-image-container">
+        <div class="result-loader" id="resultLoader2">
+          <div class="result-spinner"></div>
+          <p class="result-loading-text">Generating your visualization…</p>
+        </div>
+        <img src="images/result2.jpg" alt="AI-Generated Result 2" id="resultImage2" style="display:none">
+      </div>
     </div>
     <div class="nav-buttons" id="resultNav" style="visibility:hidden">
       <button class="btn-secondary" onclick="goBack()">Back</button>
@@ -1078,26 +1161,37 @@ function showScreen(index) {
   updateStepDots();
   window.scrollTo({ top: 0, behavior: 'smooth' });
   applyDemoLocks(index);
-  // Reset demo drag widget visibility on each screen transition
-  ['demoDragGemstone', 'demoDragSelf', 'demoDragStyle'].forEach(id => {
+  // Only restore demo drag widgets if the corresponding upload is empty
+  const widgetUploadMap = {
+    demoDragGemstone: 'gemstone',
+    demoDragSelf:     'self',
+    demoDragStyle:    'style'
+  };
+  Object.entries(widgetUploadMap).forEach(([id, key]) => {
     const el = document.getElementById(id);
-    if (el) el.style.display = '';
+    if (el) el.style.display = state.uploads[key] ? 'none' : '';
   });
   // Reposition demo arrow after paint
   requestAnimationFrame(() => requestAnimationFrame(updateDemoArrow));
 
   // Finger screen: Middle is preselected so Continue is always enabled
-  // Result screen: show loader for 2s then reveal image
+  // Result screen: show loaders for 2s then reveal both images
   if (index === 6) {
-    const loader = document.getElementById('resultLoader');
-    const img    = document.getElementById('resultImage');
-    const nav    = document.getElementById('resultNav');
+    const loader  = document.getElementById('resultLoader');
+    const loader2 = document.getElementById('resultLoader2');
+    const img     = document.getElementById('resultImage');
+    const img2    = document.getElementById('resultImage2');
+    const nav     = document.getElementById('resultNav');
     loader.style.display  = '';
+    loader2.style.display = '';
     img.style.display     = 'none';
+    img2.style.display    = 'none';
     nav.style.visibility  = 'hidden';
     setTimeout(() => {
       loader.style.display  = 'none';
+      loader2.style.display = 'none';
       img.style.display     = 'block';
+      img2.style.display    = 'block';
       nav.style.visibility  = 'visible';
     }, 2000);
   }
@@ -1183,9 +1277,8 @@ function startOver() {
   document.getElementById('inputCarat').value = '';
   document.getElementById('inputWidth').value = '';
   document.getElementById('inputHeight').value = '';
-  ['Gemstone', 'Self', 'Style'].forEach(k => {
-    const zone = document.getElementById('upload' + (k === 'Gemstone' ? 'Gemstone' : k === 'Self' ? 'Self' : 'Style'));
-    zone.classList.remove('has-file', 'demo-received');
+  ['uploadGemstone', 'uploadSelf', 'uploadStyle'].forEach(id => {
+    document.getElementById(id).classList.remove('has-file', 'demo-received');
   });
   document.getElementById('btnJewelryNext').disabled = true;
   document.getElementById('btnDetailsNext').disabled = true;
@@ -1315,8 +1408,8 @@ function handleDrop(e, zone, key) {
   if (demoData) {
     showUploadPreview(zone, key, demoData);
     const widgetMap = { gemstone: 'demoDragGemstone', self: 'demoDragSelf', style: 'demoDragStyle' };
-    const widget = document.getElementById(widgetMap[key]);
-    if (widget) widget.style.display = 'none';
+    const w = document.getElementById(widgetMap[key]);
+    if (w) w.style.display = 'none';
     return;
   }
 
@@ -1339,7 +1432,7 @@ function handleFileSelect(input, key) {
   if (input.files.length > 0) {
     const reader = new FileReader();
     reader.onload = function(ev) {
-      const zoneId = key === 'gemstone' ? 'uploadGemstone' : key === 'self' ? 'uploadSelf' : 'uploadStyle';
+      const zoneId = key === 'gemstone' ? 'uploadGemstone' : key === 'self' ? 'uploadSelf' : key === 'style2' ? 'uploadStyle2' : 'uploadStyle';
       showUploadPreview(document.getElementById(zoneId), key, ev.target.result);
     };
     reader.readAsDataURL(input.files[0]);
@@ -1347,7 +1440,7 @@ function handleFileSelect(input, key) {
 }
 
 function showUploadPreview(zone, key, dataUrl) {
-  const previewId = key === 'gemstone' ? 'previewGemstone' : key === 'self' ? 'previewSelf' : 'previewStyle';
+  const previewId = key === 'gemstone' ? 'previewGemstone' : key === 'self' ? 'previewSelf' : key === 'style2' ? 'previewStyle2' : 'previewStyle';
   document.getElementById(previewId).src = dataUrl;
   zone.classList.add('has-file');
   state.uploads[key] = true;
@@ -1360,46 +1453,69 @@ function showUploadPreview(zone, key, dataUrl) {
 
 function removeUpload(e, key) {
   e.stopPropagation();
-  const zoneId = key === 'gemstone' ? 'uploadGemstone' : key === 'self' ? 'uploadSelf' : 'uploadStyle';
+  const zoneId = key === 'gemstone' ? 'uploadGemstone' : key === 'self' ? 'uploadSelf' : key === 'style2' ? 'uploadStyle2' : 'uploadStyle';
   const zone = document.getElementById(zoneId);
   zone.classList.remove('has-file', 'demo-received');
   state.uploads[key] = false;
 
   // Restore the demo drag widget
   const widgetMap = { gemstone: 'demoDragGemstone', self: 'demoDragSelf', style: 'demoDragStyle' };
-  const widget = document.getElementById(widgetMap[key]);
-  if (widget) widget.style.display = '';
+  const w = document.getElementById(widgetMap[key]);
+  if (w) w.style.display = '';
 
   if (key === 'gemstone') document.getElementById('btnDetailsNext').disabled = true;
   if (key === 'self') document.getElementById('btnSelfNext').disabled = true;
-  if (key === 'style') document.getElementById('btnStyleNext').disabled = true;
+  if (key === 'style' || key === 'style2') document.getElementById('btnStyleNext').disabled = true;
 }
 
 /* ── Demo Draggable Images ─────────────────────────────────── */
 const demoImageData = {};
+const demoImageElements = {};
 (function preloadDemoImages() {
   const srcMap = {
     gemstone: 'images/demo-gemstone.jpg',
     self:     'images/demo-self.png',
-    style:    'images/demo-style.webp'
+    style:    'images/demo-style.webp',
+    style2:   'images/demo-style2.webp'
   };
+  let loaded = 0;
+  const total = Object.keys(srcMap).length;
   Object.entries(srcMap).forEach(([key, src]) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = function() {
+      demoImageElements[key] = img;
       const canvas = document.createElement('canvas');
       canvas.width = img.naturalWidth;
       canvas.height = img.naturalHeight;
       canvas.getContext('2d').drawImage(img, 0, 0);
       try { demoImageData[key] = canvas.toDataURL(); } catch(err) {}
+      loaded++;
+      // Once both style images loaded, create the composite
+      if (loaded === total && demoImageElements.style && demoImageElements.style2) {
+        const s1 = demoImageElements.style, s2 = demoImageElements.style2;
+        const gap = 16;
+        const h = Math.max(s1.naturalHeight, s2.naturalHeight);
+        const c = document.createElement('canvas');
+        c.width = s1.naturalWidth + gap + s2.naturalWidth;
+        c.height = h;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(s1, 0, (h - s1.naturalHeight) / 2);
+        ctx.drawImage(s2, s1.naturalWidth + gap, (h - s2.naturalHeight) / 2);
+        try { demoImageData.stylePair = c.toDataURL(); } catch(err) {}
+      }
     };
     img.src = src;
   });
 })();
 
 function handleDemoDragStart(e, key) {
-  const dataUrl = demoImageData[key];
-  if (dataUrl) e.dataTransfer.setData('text/demo-image', dataUrl);
+  if (key === 'style' && demoImageData.stylePair) {
+    e.dataTransfer.setData('text/demo-image', demoImageData.stylePair);
+  } else {
+    const dataUrl = demoImageData[key];
+    if (dataUrl) e.dataTransfer.setData('text/demo-image', dataUrl);
+  }
   e.dataTransfer.effectAllowed = 'copy';
 }
 
