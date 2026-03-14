@@ -27,7 +27,9 @@
       "Bash(git push -u origin main)",
       "Bash(git remote set-url origin git@github.com:lylyto321-cpu/GemVision-demo.git)",
       "Bash(gh auth status)",
-      "Bash(git add -A)"
+      "Bash(git add -A)",
+      "Bash(git stash pop)",
+      "Bash(git pull --strategy-option=theirs origin main)"
     ]
   }
 }
